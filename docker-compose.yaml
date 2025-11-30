@@ -1,0 +1,33 @@
+services:
+  # SERVICIO 1: TU API (PYTHON)
+  api:
+    build: .
+    container_name: logistica_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src  # Espejo mágico: editas en Windows, se actualiza en Docker
+    environment:
+      - DB_HOST=db
+      - DB_NAME=logistica
+      - DB_USER=admin
+      - DB_PASS=admin123
+    depends_on:
+      - db
+
+  # SERVICIO 2: BASE DE DATOS (POSTGRESQL + POSTGIS)
+  # Usamos una imagen que ya trae las herramientas matemáticas geográficas instaladas
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: logistica_db
+    environment:
+      - POSTGRES_DB=logistica
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persistencia de datos
+
+volumes:
+  postgres_data:
