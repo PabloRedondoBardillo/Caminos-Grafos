@@ -4,7 +4,7 @@ services:
     build: .
     container_name: logistica_api
     ports:
-      - "8000:8000"
+      - "8005:8005"
     volumes:
       - ./src:/app/src  # Espejo mágico: editas en Windows, se actualiza en Docker
     environment:
