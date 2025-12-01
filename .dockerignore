@@ -1,0 +1,7 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.sql
+*.dump
+copia_seguridad.sql
