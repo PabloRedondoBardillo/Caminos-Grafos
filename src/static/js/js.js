@@ -1,148 +1,152 @@
+// Fíjate en el "./libs/"
+import * as THREE from './libs/three.module.js';
+import { OrbitControls } from './libs/OrbitControls.js';
+
 // --- 1. ESCENA ---
-        const scene = new THREE.Scene();
-        // Fondo blanco niebla para suavizar el horizonte
-        scene.fog = new THREE.FogExp2(0xffffff, 0.02);
+const scene = new THREE.Scene();
+// Fondo blanco niebla para suavizar el horizonte
+scene.fog = new THREE.FogExp2(0xffffff, 0.02);
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 18;
-        camera.position.y = 5;
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 18;
+camera.position.y = 5;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Alpha true para transparencia
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1);
-        document.body.appendChild(renderer.domElement);
+const renderer = new THREE.WebGLRenderer({ antialias: true}); // Alpha true para transparencia
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0xffffff, 1);
+document.body.appendChild(renderer.domElement);
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.8;
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.8;
 
-        // --- 2. ILUMINACIÓN ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
+// --- 2. ILUMINACIÓN ---
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+sunLight.position.set(10, 10, 10);
+scene.add(sunLight);
+
+// --- 3. PLANETA TIERRA ---
+const radioTierra = 5;
+const earthGroup = new THREE.Group(); // Grupo para rotar todo junto
+scene.add(earthGroup);
+
+const textureLoader = new THREE.TextureLoader();
+const earthMat = new THREE.MeshPhongMaterial({ 
+    map: textureLoader.load('/static/img/earth.jpg'),
+    specular: new THREE.Color(0x333333),
+    shininess: 5
+});
+const earthGeo = new THREE.SphereGeometry(radioTierra, 64, 64);
+const earth = new THREE.Mesh(earthGeo, earthMat);
+earthGroup.add(earth);
+
+// --- 4. FUNCIONES MATEMÁTICAS ---
+
+// Convertir Lat/Lon a Vector3
+function latLonToVector3(lat, lon, radius) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+    const x = -(radius * Math.sin(phi) * Math.cos(theta));
+    const z = (radius * Math.sin(phi) * Math.sin(theta));
+    const y = (radius * Math.cos(phi));
+    return new THREE.Vector3(x, y, z);
+}
+
+// Crear una curva suave entre dos puntos (Arco de Vuelo)
+function createCurve(p1, p2) {
+    // 1. Calculamos la distancia entre ciudades
+    const distance = p1.distanceTo(p2);
+    
+    // 2. Calculamos los puntos de control para la curva de Bezier
+    // Cuanto más lejos estén las ciudades, más alto sube el arco (distance * 0.5)
+    // Si están muy cerca, el arco es bajito.
+    const alturaArco = 1 + (distance * 0.5); 
+    
+    // Encontramos el punto medio en línea recta
+    const mid = p1.clone().add(p2).multiplyScalar(0.5);
+    // Lo "empujamos" hacia afuera desde el centro de la tierra hasta la altura deseada
+    mid.normalize().multiplyScalar(radioTierra + alturaArco);
+
+    // 3. Generamos la curva (Usamos QuadraticBezier para suavidad y rendimiento)
+    const curve = new THREE.QuadraticBezierCurve3(
+        p1,
+        mid, // Punto de control (la cima del arco)
+        p2
+    );
+
+    // 4. Creamos la geometría de la línea
+    const points = curve.getPoints(50); // 50 segmentos para que se vea redonda
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    
+    return geometry;
+}
+
+// --- 5. CARGAR DATOS Y DIBUJAR ---
+fetch('/api/mapa')
+    .then(response => response.json())
+    .then(data => {
         
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        sunLight.position.set(10, 10, 10);
-        scene.add(sunLight);
+        // A) CIUDADES: Marcador estético (Doble esfera)
+        const cityCoreGeo = new THREE.SphereGeometry(0.06, 16, 16);
+        const cityCoreMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 }); // Núcleo naranja
 
-        // --- 3. PLANETA TIERRA ---
-        const radioTierra = 5;
-        const earthGroup = new THREE.Group(); // Grupo para rotar todo junto
-        scene.add(earthGroup);
+        const cityGlowGeo = new THREE.SphereGeometry(0.15, 16, 16);
+        const cityGlowMat = new THREE.MeshBasicMaterial({ 
+            color: 0xffaa00, 
+            transparent: true, 
+            opacity: 0.15 
+        }); // Halo transparente
+        console.log(data)
+        data.ciudades.forEach(ciudad => {
+            const pos = latLonToVector3(ciudad.lat, ciudad.lon, radioTierra);
+            
+            // Núcleo sólido
+            const core = new THREE.Mesh(cityCoreGeo, cityCoreMat);
+            core.position.copy(pos);
+            earthGroup.add(core);
 
-        const textureLoader = new THREE.TextureLoader();
-        const earthMat = new THREE.MeshPhongMaterial({ 
-            map: textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg'),
-            specular: new THREE.Color(0x333333),
-            shininess: 5
+            // Halo Brillante
+            const glow = new THREE.Mesh(cityGlowGeo, cityGlowMat);
+            glow.position.copy(pos);
+            earthGroup.add(glow);
         });
-        const earthGeo = new THREE.SphereGeometry(radioTierra, 64, 64);
-        const earth = new THREE.Mesh(earthGeo, earthMat);
-        earthGroup.add(earth);
 
-        // --- 4. FUNCIONES MATEMÁTICAS ---
-        
-        // Convertir Lat/Lon a Vector3
-        function latLonToVector3(lat, lon, radius) {
-            const phi = (90 - lat) * (Math.PI / 180);
-            const theta = (lon + 180) * (Math.PI / 180);
-            const x = -(radius * Math.sin(phi) * Math.cos(theta));
-            const z = (radius * Math.sin(phi) * Math.sin(theta));
-            const y = (radius * Math.cos(phi));
-            return new THREE.Vector3(x, y, z);
-        }
-
-        // Crear una curva suave entre dos puntos (Arco de Vuelo)
-        function createCurve(p1, p2) {
-            // 1. Calculamos la distancia entre ciudades
-            const distance = p1.distanceTo(p2);
-            
-            // 2. Calculamos los puntos de control para la curva de Bezier
-            // Cuanto más lejos estén las ciudades, más alto sube el arco (distance * 0.5)
-            // Si están muy cerca, el arco es bajito.
-            const alturaArco = 1 + (distance * 0.5); 
-            
-            // Encontramos el punto medio en línea recta
-            const mid = p1.clone().add(p2).multiplyScalar(0.5);
-            // Lo "empujamos" hacia afuera desde el centro de la tierra hasta la altura deseada
-            mid.normalize().multiplyScalar(radioTierra + alturaArco);
-
-            // 3. Generamos la curva (Usamos QuadraticBezier para suavidad y rendimiento)
-            const curve = new THREE.QuadraticBezierCurve3(
-                p1,
-                mid, // Punto de control (la cima del arco)
-                p2
-            );
-
-            // 4. Creamos la geometría de la línea
-            const points = curve.getPoints(50); // 50 segmentos para que se vea redonda
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            
-            return geometry;
-        }
-
-        // --- 5. CARGAR DATOS Y DIBUJAR ---
-        fetch('/api/mapa')
-            .then(response => response.json())
-            .then(data => {
-                
-                // A) CIUDADES: Marcador estético (Doble esfera)
-                const cityCoreGeo = new THREE.SphereGeometry(0.06, 16, 16);
-                const cityCoreMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 }); // Núcleo naranja
-
-                const cityGlowGeo = new THREE.SphereGeometry(0.15, 16, 16);
-                const cityGlowMat = new THREE.MeshBasicMaterial({ 
-                    color: 0xffaa00, 
-                    transparent: true, 
-                    opacity: 0.3 
-                }); // Halo transparente
-
-                data.ciudades.forEach(ciudad => {
-                    const pos = latLonToVector3(ciudad.lat, ciudad.lon, radioTierra);
-                    
-                    // Núcleo sólido
-                    const core = new THREE.Mesh(cityCoreGeo, cityCoreMat);
-                    core.position.copy(pos);
-                    earthGroup.add(core);
-
-                    // Halo Brillante
-                    const glow = new THREE.Mesh(cityGlowGeo, cityGlowMat);
-                    glow.position.copy(pos);
-                    earthGroup.add(glow);
-                });
-
-                // B) RUTAS: Arcos Curvos
-                // Material de línea elegante (Azul Tecnológico)
-                const lineMaterial = new THREE.LineBasicMaterial({ 
-                    color: 0x0077ff, 
-                    transparent: true, 
-                    opacity: 0.6,
-                    linewidth: 1 // Nota: WebGL limita el grosor, pero el color destaca
-                });
-
-                data.conexiones.forEach(conn => {
-                    const p1 = latLonToVector3(conn.lat1, conn.lon1, radioTierra);
-                    const p2 = latLonToVector3(conn.lat2, conn.lon2, radioTierra);
-                    
-                    const curveGeo = createCurve(p1, p2);
-                    const curveMesh = new THREE.Line(curveGeo, lineMaterial);
-                    
-                    earthGroup.add(curveMesh);
-                });
-            });
-
-
-        // --- LOOP DE ANIMACIÓN ---
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        // B) RUTAS: Arcos Curvos
+        // Material de línea elegante (Azul Tecnológico)
+        const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: 0x0077ff, 
+            transparent: true, 
+            opacity: 0.6,
+            linewidth: 1 // Nota: WebGL limita el grosor, pero el color destaca
         });
+
+        data.conexiones.forEach(conn => {
+            const p1 = latLonToVector3(conn.lat1, conn.lon1, radioTierra);
+            const p2 = latLonToVector3(conn.lat2, conn.lon2, radioTierra);
+            
+            const curveGeo = createCurve(p1, p2);
+            const curveMesh = new THREE.Line(curveGeo, lineMaterial);
+            
+            earthGroup.add(curveMesh);
+        });
+    });
+
+
+// --- LOOP DE ANIMACIÓN ---
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
