@@ -1,1 +1,0 @@
-/*Creamos escena*/
