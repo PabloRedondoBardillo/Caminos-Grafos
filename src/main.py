@@ -56,6 +56,7 @@ def home(request: Request):
     # - Otra vez (c2) para sacar datos del Destino
     query = """
         SELECT 
+            con.id as id,
             c1.nombre as origen, 
             c1.latitud as lat1, 
             c1.longitud as lon1,
@@ -77,13 +78,14 @@ def home(request: Request):
     
     for fila in resultados_raw:
         # Desempaquetamos la fila de la DB
-        origen, lat1, lon1, destino, lat2, lon2 = fila
+        ide, origen, lat1, lon1, destino, lat2, lon2 = fila
         
         # ¡AQUÍ CALCULAMOS TU FÓRMULA!
         km = calcular_distancia(lat1, lon1, lat2, lon2)
         
         # Guardamos todo en una lista bonita para el HTML
         datos_procesados.append({
+            "id": ide,
             "origen": origen,
             "destino": destino,
             "coords_origen": f"({lat1}, {lon1})",
@@ -103,25 +105,17 @@ def obtener_datos_mapa():
     cur.execute("SELECT id, nombre, latitud, longitud FROM ciudades")
     ciudades = [{"id": row[0], "nombre": row[1], "lat": row[2], "lon": row[3]} for row in cur.fetchall()]
     
-    # 2. Obtener todas las conexiones (pares de coordenadas)
-    # Hacemos el JOIN para que el Frontend reciba directamente las coordenadas de inicio y fin
-    cur.execute("""
+    query = """
         SELECT c1.latitud, c1.longitud, c2.latitud, c2.longitud
         FROM conexiones con
         JOIN ciudades c1 ON con.origen_id = c1.id
         JOIN ciudades c2 ON con.destino_id = c2.id
-    """)
+    """
+
+    cur.execute(query)
     conexiones = [{"lat1": row[0], "lon1": row[1], "lat2": row[2], "lon2": row[3]} for row in cur.fetchall()]
     
     cur.close()
     conn.close()
     
     return {"ciudades": ciudades, "conexiones": conexiones}
-
-
-
-# --- (Opcional) Endpoint para añadir ---
-@app.post("/add")
-def add_city(request: Request):
-    # (Lo he simplificado para centrarnos en el cálculo de distancias)
-    return templates.TemplateResponse("index.html", {"request": request, "rutas": [], "mensaje": "Función desactivada en esta demo de distancias"})

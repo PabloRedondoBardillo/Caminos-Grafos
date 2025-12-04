@@ -18,9 +18,9 @@
                     <th>Distancia</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tabla">
                 {% for ruta in rutas %}
-                <tr>
+                <tr id=" {{ruta.id}} ">
                     <td><b>{{ ruta.origen }}</b> ➝ {{ ruta.destino }}</td>
                     <td>{{ ruta.distancia_km }} km</td>
                 </tr>
