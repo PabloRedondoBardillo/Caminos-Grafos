@@ -106,14 +106,14 @@ def obtener_datos_mapa():
     ciudades = [{"id": row[0], "nombre": row[1], "lat": row[2], "lon": row[3]} for row in cur.fetchall()]
     
     query = """
-        SELECT c1.latitud, c1.longitud, c2.latitud, c2.longitud
+        SELECT con.id, c1.latitud, c1.longitud, c2.latitud, c2.longitud
         FROM conexiones con
         JOIN ciudades c1 ON con.origen_id = c1.id
         JOIN ciudades c2 ON con.destino_id = c2.id
     """
 
     cur.execute(query)
-    conexiones = [{"lat1": row[0], "lon1": row[1], "lat2": row[2], "lon2": row[3]} for row in cur.fetchall()]
+    conexiones = [{"id":row[0], "lat1": row[1], "lon1": row[2], "lat2": row[3], "lon2": row[4]} for row in cur.fetchall()]
     
     cur.close()
     conn.close()

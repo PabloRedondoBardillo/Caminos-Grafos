@@ -3,6 +3,16 @@ body {
     overflow: hidden; 
     background-color: #ffffff; 
     font-family: 'Segoe UI', sans-serif; 
+    z-index: 5;
+}
+
+#canvas {
+    z-index: -1;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: block;
+    outline: none;
 }
         
 #info {
@@ -70,4 +80,84 @@ tr:hover {
 
 .seleccionada {
     background-color: rgb(197, 255, 252) !important;
+}
+
+.buscador {
+    position: absolute;
+    top: 150px;
+    left: 20px;
+}
+
+.buscador_input {
+    padding: .8rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    user-select: none;
+    border: 1px solid gray;
+    outline: none;
+}
+
+.formulario {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    width: fit-content;
+}
+
+.buscador_boton {
+    background-color: #0077ff;
+    padding: .3rem;
+    border: none;
+    border-radius: 20%;
+}
+
+.buscador_boton:hover {
+    cursor: pointer;
+}
+
+.buscador_boton > img {
+    width: 2rem;
+    filter: invert();
+}
+
+.lista_buscando {
+    z-index: 100;
+    position: absolute;
+    top: 50px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background-color: white;
+}
+
+.lista_buscando > li {
+    z-index: 150;
+    border-bottom: 1px solid gray;
+}
+
+.lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.elemento_lista {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.elemento_lista > button {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+    background-color: transparent;
+    border: none;
+    margin: 0;
+}
+
+.elemento_lista > button:hover {
+    cursor: pointer;
 }
