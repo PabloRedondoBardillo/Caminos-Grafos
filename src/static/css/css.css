@@ -3,18 +3,22 @@ body {
     overflow: hidden; 
     background-color: #ffffff; 
     font-family: 'Segoe UI', sans-serif; 
-    z-index: 5;
 }
 
 #canvas {
-    z-index: -1;
+    z-index: 0;
     position: fixed;
     top: 0;
     left: 0;
     display: block;
     outline: none;
 }
-        
+
+.buscador, #info, #tabla-container {
+    z-index: 10;
+    position: absolute;
+}
+
 #info {
     position: absolute; 
     top: 20px; 
@@ -86,6 +90,11 @@ tr:hover {
     position: absolute;
     top: 150px;
     left: 20px;
+
+    /*Truco para que utilice una nueva capa de GPU y no moleste al canvas*/
+    /*Utilizado para navegadores poco optimizados como GoogleChrome, con Firefox no es necesario*/
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 .buscador_input {
