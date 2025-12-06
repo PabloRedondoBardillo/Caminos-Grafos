@@ -1,36 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Logística Pro - Arcos 3D</title>
+    <title>Redes Routers</title>
     <link rel="stylesheet" href="/static/css/css.css">
 </head>
 <body>
-    <div id="info">
-        <h1>✈️ Global Logistics Network</h1>
-        <p style="margin-top:5px; font-size:0.9rem;">Visualización de Rutas Geodésicas</p>
+    <div class="info">
+        <h1 class="info_titulo">Accesos Internet</h1>
+        <p class="info_parrafo">Visualización de Conexiones entre Routers Principales</p>
     </div>
     <div class="buscador">
-        <div class="formulario">
-            <input type="text" id="buscador" placeholder="Busca..." class="buscador_input">
-            <button type="submit" id="botonBuscador" class="buscador_boton"><img src="/static/img/lupa.png" alt="Lupa_Buscador"></button>
-            <ul id="lista_buscando" class="lista_buscando">
-                
-            </ul>
+        <div class="buscador_contenedor">
+            <div class="buscador_contenedor-estatico">
+                <button type="submit" id="botonBuscador" class="contenedor_estatico-boton"><img src="/static/img/lupa.png" alt="Lupa_Buscador"></button>
+                <input type="text" id="buscador" placeholder="Busca..." class="contenedor_estatico-input">
+            </div>
+            <ul id="lista_buscando" class="buscador_contenedor-buscando"></ul>
         </div>
-
-        <ul id="lista_buscador" class="lista">
-            
-        </ul>
+        <ul id="lista_buscador" class="buscador_buscado"></ul>
     </div>
-    <div id="tabla-container">
-        <table>
-            <thead>
+    <div class="tabla_contenedor">
+        <table class="tabla_contenedor-tabla">
+            <thead class="contenedor_tabla-thead">
                 <tr>
                     <th>Ruta</th>
                     <th>Distancia</th>
                 </tr>
             </thead>
-            <tbody id="tabla">
+            <tbody id="tabla" class="contenedor_tabla-tbody">
                 {% for ruta in rutas %}
                 <tr id=" {{ruta.id}} ">
                     <td><b>{{ ruta.origen }}</b> ➝ {{ ruta.destino }}</td>
