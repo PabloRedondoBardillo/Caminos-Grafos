@@ -40,7 +40,7 @@ INSERT INTO ciudades (id, nombre, latitud, longitud) VALUES
 (21, 'Prague', 50.0755, 14.4378),
 (22, 'Zurich', 47.3769, 8.5417),
 (23, 'Moscow', 55.7558, 37.6173),
-(24, 'Los Angeles', 34.0522, -118.2437),
+(24, 'Los-Angeles', 34.0522, -118.2437),
 (25, 'Chicago', 41.8781, -87.6298),
 (26, 'Toronto', 43.6510, -79.3470),
 (27, 'Miami', 25.7617, -80.1918),
