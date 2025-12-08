@@ -1,6 +1,6 @@
--- init.sql
+CREATE EXTENSION IF NOT EXISTS postgis;
 
--- 1. CREAR TABLAS
+-- Creamos las tablas e introducimos los datos
 CREATE TABLE IF NOT EXISTS ciudades (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) UNIQUE NOT NULL,
@@ -15,7 +15,24 @@ CREATE TABLE IF NOT EXISTS conexiones (
     UNIQUE(origen_id, destino_id)
 );
 
--- 2. INSERTAR CIUDADES (Les forzamos el ID para relacionarlas fácil)
+CREATE OR REPLACE VIEW vista_detalles_rutas AS
+SELECT 
+    con.id as conexion_id,
+    c1.nombre as origen,
+    c1.latitud as lat_origen,
+    c1.longitud as lon_origen,
+    c2.nombre as destino,
+    c2.latitud as lat_destino,
+    c2.longitud as lon_destino,
+    -- Aquí va tu cálculo matemático pesado:
+    ROUND((ST_Distance(
+        ST_MakePoint(c1.longitud, c1.latitud)::geography, 
+        ST_MakePoint(c2.longitud, c2.latitud)::geography
+    ) / 1000)::numeric, 2) as distancia_km
+FROM conexiones con
+JOIN ciudades c1 ON con.origen_id = c1.id
+JOIN ciudades c2 ON con.destino_id = c2.id;
+
 INSERT INTO ciudades (id, nombre, latitud, longitud) VALUES
 (1, 'Madrid', 40.4168, -3.7038),
 (2, 'New-York', 40.7128, -74.0060),
@@ -78,11 +95,10 @@ INSERT INTO ciudades (id, nombre, latitud, longitud) VALUES
 (59, 'Auckland', -36.8485, 174.7633),
 (60, 'Perth', -31.9505, 115.8605);
 
--- 3. INSERTAR RELACIONES (Usando los IDs de arriba)
 INSERT INTO conexiones (origen_id, destino_id) VALUES 
 (1, 5), (1, 6), (1, 4), (2, 4), (2, 3), (2, 9), (3, 7), (3, 10), (1, 11), (1, 12), (1, 16), (4, 17), (4, 13), (4, 11), (5, 14), (5, 22), (5, 12), (11, 21), (11, 19), (11, 23), (12, 18), (12, 56), (15, 21), (15, 20), (2, 25), (2, 27), (2, 29), (2, 26), 
 (24, 2), (24, 28), (24, 30), (24, 3), (27, 36), (27, 39), (27, 6), (26, 32), (26, 33), (6, 34), (6, 38), (38, 37), (38, 35), (36, 35), (36, 9), (3, 40), (3, 41), (3, 49), (10, 41), (10, 23), (41, 42), (42, 47), (42, 50), (47, 48), (47, 46), (47, 7),
 (44, 45), (44, 51), (51, 4), (51, 2), (51, 8), (8, 56), (8, 52), (52, 53), (52, 54), (56, 11), (56, 23), (7, 59), (7, 58), (60, 47);
 
--- 4. ARREGLAR EL CONTADOR DE IDs (IMPORTANTE)
+-- Arreglamos el contador de ids
 SELECT setval('ciudades_id_seq', (SELECT MAX(id) FROM ciudades));

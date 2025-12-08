@@ -13,7 +13,8 @@ services:
       - DB_USER=admin
       - DB_PASS=admin123
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   # SERVICIO 2: BASE DE DATOS (POSTGRESQL + POSTGIS)
   # Usamos una imagen que ya trae las herramientas matemáticas geográficas instaladas
@@ -29,6 +30,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data # Persistencia de datos
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d logistica"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

@@ -175,7 +175,6 @@ async function iniciarMundo() {
         const hitboxCiudadMat = new THREE.MeshBasicMaterial({visible: false});
 
         apiData.ciudades.forEach(ciudad =>{
-            console.log(informacionImagen)
             const ciudadActualMat = ciudadMat.clone();
             const ciudadAuxActualMat = ciudadAuxMat.clone();
 
@@ -211,7 +210,7 @@ async function iniciarMundo() {
         //Creamos lineas entre ciudades
         //Hacemos lo mismo que con las ciudades, clonamos
         const lineaMat = new THREE.LineBasicMaterial({color: 0xFF21E3});
-
+        console.log(apiData.conexiones)
         apiData.conexiones.forEach(conexion =>{
             const alturaFactor1 = conseguirAlturaNueva(conexion.lat1, conexion.lon1, informacionAltura);
             const alturaFactor2 = conseguirAlturaNueva(conexion.lat2, conexion.lon2, informacionAltura);
@@ -384,7 +383,7 @@ function interaccionRaycaster(event, isClick){
 window.addEventListener("click", (event) => interaccionRaycaster(event, true));
 window.addEventListener("mousemove", (event) => interaccionRaycaster(event, false));
 
-/*Actualizamos las dimensiones del canvas*/
+//Actualizamos las dimensiones del canvas
 window.addEventListener("resize", ()=>{
     camara.aspect = window.innerWidth / window.innerHeight;
     camara.updateProjectionMatrix();
